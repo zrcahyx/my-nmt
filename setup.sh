@@ -7,6 +7,7 @@ else
     echo 'no bpe already done'
 fi
 if [ ! -f "train/data/no_bpe/test.fr" ]; then
+    mkdir -p train/data/no_bpe
     cp scripts/wmt_fr_en/train.tok.clean.en train/data/no_bpe/train.en
     cp scripts/wmt_fr_en/train.tok.clean.fr train/data/no_bpe/train.fr
     cp scripts/wmt_fr_en/dev.tok.clean.en train/data/no_bpe/dev.en
@@ -29,6 +30,7 @@ else
     echo 'bpe already done!'
 fi
 if [ ! -f "train/data/bpe/vocab.bpe.32000.fr" ]; then
+    mkdir -p train/data/bpe
     cp scripts/wmt_fr_en/train.tok.clean.bpe.32000.fr train/data/bpe/train.fr
     cp scripts/wmt_fr_en/train.tok.clean.bpe.32000.en train/data/bpe/train.en
     cp scripts/wmt_fr_en/dev.tok.clean.bpe.32000.fr train/data/bpe/dev.fr
