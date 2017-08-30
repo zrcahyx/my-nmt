@@ -14,7 +14,7 @@ def write_header(fw):
 
 
 def main():
-    data_dir = join(dirname(dirname(abspath(__file__))), 'train', 'data', 'no_bpe')
+    data_dir = join(dirname(dirname(abspath(__file__))), 'train', 'data', 'normal')
     # generate src/tgt tables
     src_vocab_set, tgt_vocab_set = set(), set()
     with open(join(data_dir, 'train.en'), 'r') as f:
@@ -30,10 +30,10 @@ def main():
 
     # write to config
     cfg = ConfigHelper()
-    cfg.set_value('Data', 'no_bpe_src_vocab_size', len(src_vocab_set) + 3)
-    cfg.set_value('Data', 'no_bpe_tgt_vocab_size', len(tgt_vocab_set) + 3)
-    print('no_bpe_src_vocab_size: {}'.format(len(src_vocab_set) + 3))
-    print('no_bpe_tgt_vocab_size: {}'.format(len(tgt_vocab_set) + 3))
+    cfg.set_value('Data', 'normal_src_vocab_size', len(src_vocab_set) + 3)
+    cfg.set_value('Data', 'normal_tgt_vocab_size', len(tgt_vocab_set) + 3)
+    print('normal_src_vocab_size: {}'.format(len(src_vocab_set) + 3))
+    print('normal_tgt_vocab_size: {}'.format(len(tgt_vocab_set) + 3))
 
     # write to src/tgt vocab file
     fw = open(join(data_dir, 'vocab.en'), 'w')
@@ -46,7 +46,7 @@ def main():
     for vocab in list(tgt_vocab_set):
         fw.write('{}\n'.format(vocab))
     fw.close()
-    print('generate no bpe vocab files successfully!')
+    print('generate normal vocab files successfully!')
 
 
 if __name__ == '__main__':

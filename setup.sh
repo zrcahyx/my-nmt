@@ -6,19 +6,19 @@ if [ ! -f "scripts/wmt_fr_en/train.tok.clean.en" ]; then
 else
     echo 'no bpe already done'
 fi
-if [ ! -f "train/data/no_bpe/test.fr" ]; then
-    mkdir -p train/data/no_bpe
-    cp scripts/wmt_fr_en/train.tok.clean.en train/data/no_bpe/train.en
-    cp scripts/wmt_fr_en/train.tok.clean.fr train/data/no_bpe/train.fr
-    cp scripts/wmt_fr_en/dev.tok.clean.en train/data/no_bpe/dev.en
-    cp scripts/wmt_fr_en/dev.tok.clean.fr train/data/no_bpe/dev.fr
-    cp scripts/wmt_fr_en/test.tok.clean.en train/data/no_bpe/test.en
-    cp scripts/wmt_fr_en/test.tok.clean.fr train/data/no_bpe/test.fr
+if [ ! -f "train/data/normal/test.fr" ]; then
+    mkdir -p train/data/normal
+    cp scripts/wmt_fr_en/train.tok.clean.en train/data/normal/train.en
+    cp scripts/wmt_fr_en/train.tok.clean.fr train/data/normal/train.fr
+    cp scripts/wmt_fr_en/dev.tok.clean.en train/data/normal/dev.en
+    cp scripts/wmt_fr_en/dev.tok.clean.fr train/data/normal/dev.fr
+    cp scripts/wmt_fr_en/test.tok.clean.en train/data/normal/test.en
+    cp scripts/wmt_fr_en/test.tok.clean.fr train/data/normal/test.fr
 else
     echo 'no bpe data already exists!'
 fi
-if [ ! -f "train/data/no_bpe/vocab.fr" ]; then
-    python scripts/generate_no_bpe_vocab_file.py
+if [ ! -f "train/data/normal/vocab.fr" ]; then
+    python scripts/generate_normal_vocab_file.py
 else
     echo 'no bpe vocab file already exists!'
 fi

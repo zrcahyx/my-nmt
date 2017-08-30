@@ -16,6 +16,9 @@ if [ ! -d "${OUTPUT_DIR}/subword-nmt" ]; then
 fi
 
 # Learn Shared BPE
+# step1: learn bpe -> bpe.32000 subword vocab size
+# step2: apply bpe -> xxx.bpe.32000.fr/en
+# step3: get vocab -> vocab.bpe.32000
 for merge_ops in 32000; do
   echo "Learning BPE with merge_ops=${merge_ops}. This may take a while..."
   cat "${OUTPUT_DIR}/train.tok.clean.fr" "${OUTPUT_DIR}/train.tok.clean.en" | \
