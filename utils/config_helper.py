@@ -42,6 +42,14 @@ class ConfigHelper(object):
         value = cf.getboolean(section, name)
         return value
 
+    def get_list_value(self, section, name, config_file='config.conf'):
+        if self._config_file:
+            config_file = self._config_file
+        cf = ConfigParser.ConfigParser()
+        cf.read(self._get_cfg_path(config_file))
+        value = cf.get(section, name)
+        return eval(value)
+
     def set_value(self, section, name, value, config_file='config.conf'):
         if self._config_file:
             config_file = self._config_file

@@ -30,8 +30,8 @@ def main():
 
     # write to config
     cfg = ConfigHelper()
-    cfg.set_value('Data', 'normal_src_vocab_size', len(src_vocab_set) + 3)
-    cfg.set_value('Data', 'normal_tgt_vocab_size', len(tgt_vocab_set) + 3)
+    cfg.set_value('Others', 'normal_src_vocab_size', len(src_vocab_set) + 3)
+    cfg.set_value('Others', 'normal_tgt_vocab_size', len(tgt_vocab_set) + 3)
     print('normal_src_vocab_size: {}'.format(len(src_vocab_set) + 3))
     print('normal_tgt_vocab_size: {}'.format(len(tgt_vocab_set) + 3))
 
