@@ -42,6 +42,7 @@ done
 echo "#!/bin/bash">run.sh
 echo "source /aifs/users/rcz56/env/bin/activate">>run.sh
 echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64">>run.sh
+echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64">>run.sh
 echo "python train.py">>run.sh
 
 # ROOT_DIR=`cd .. && pwd`
