@@ -54,36 +54,36 @@ def _run_training():
             hparams, test_src_file, src_vocab2idx_table
         )
 
-    with tf.device('/gpu:{}'.format(hparams.gpu_list[0])):
-        with tf.name_scope('Train'):
-            with tf.variable_scope('NMTModel', reuse=None):
-                train_model = NMTModel(
-                    hparams,
-                    tf.contrib.learn.ModeKeys.TRAIN,
-                    train_inputs,
-                    src_vocab2idx_table,
-                    tgt_vocab2idx_table
-                )
+    # with tf.device('/gpu:{}'.format(hparams.gpu_list[0])):
+    with tf.name_scope('Train'):
+        with tf.variable_scope('NMTModel', reuse=None):
+            train_model = NMTModel(
+                hparams,
+                tf.contrib.learn.ModeKeys.TRAIN,
+                train_inputs,
+                src_vocab2idx_table,
+                tgt_vocab2idx_table
+            )
 
-        with tf.name_scope('Dev'):
-            with tf.variable_scope('NMTModel', reuse=True):
-                dev_model = NMTModel(
-                    hparams,
-                    tf.contrib.learn.ModeKeys.EVAL,
-                    dev_inputs,
-                    src_vocab2idx_table,
-                    tgt_vocab2idx_table
-                )
+    with tf.name_scope('Dev'):
+        with tf.variable_scope('NMTModel', reuse=True):
+            dev_model = NMTModel(
+                hparams,
+                tf.contrib.learn.ModeKeys.EVAL,
+                dev_inputs,
+                src_vocab2idx_table,
+                tgt_vocab2idx_table
+            )
 
-        with tf.name_scope('Test'):
-            with tf.variable_scope('NMTModel', reuse=True):
-                test_model = NMTModel(
-                    hparams,
-                    tf.contrib.learn.ModeKeys.INFER,
-                    test_inputs,
-                    src_vocab2idx_table,
-                    tgt_vocab2idx_table
-                )
+    with tf.name_scope('Test'):
+        with tf.variable_scope('NMTModel', reuse=True):
+            test_model = NMTModel(
+                hparams,
+                tf.contrib.learn.ModeKeys.INFER,
+                test_inputs,
+                src_vocab2idx_table,
+                tgt_vocab2idx_table
+            )
 
     print('Graph build successfully!')
     input('> ')

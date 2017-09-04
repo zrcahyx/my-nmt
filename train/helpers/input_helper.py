@@ -4,7 +4,7 @@
 """Utility to handle inputs."""
 
 import tensorflow as tf
-import tf.contrib.data as data
+import tensorflow.contrib.data as data
 
 
 class BatchedInput(object):

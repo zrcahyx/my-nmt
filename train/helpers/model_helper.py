@@ -3,6 +3,7 @@
 
 """Utility functions for building models."""
 
+import copy
 import tensorflow as tf
 
 
@@ -110,7 +111,7 @@ def create_rnn_cell(hparams, mode):
 
 def _build_bidirectional_rnn(hparams, mode, encoder_emb_inp, sequence_length):
     """Create biddirectional RNN cells."""
-    tmp_hparams = hparams
+    tmp_hparams = copy.deepcopy(hparams)
     if hparams.num_layers % 2 != 0:
         raise ValueError('use bi encoder_type, but num_layers not even!')
     # divided by 2 to get same size encoder states to be used by decoder!
@@ -121,7 +122,7 @@ def _build_bidirectional_rnn(hparams, mode, encoder_emb_inp, sequence_length):
     bw_cells = create_rnn_cell(tmp_hparams, mode)
     bi_outputs, bi_state = tf.nn.bidirectional_dynamic_rnn(
         fw_cells, bw_cells, encoder_emb_inp,
-        sequence_length=sequence_length,
+        sequence_length=sequence_length, dtype=tf.float32,
         time_major=tmp_hparams.time_major)
     return tf.concat(bi_outputs, -1), bi_state
 

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import tensorflow as tf
+from tensorflow.python.layers import core as layers_core
 from helpers.model_helper import *
 
 
@@ -53,18 +54,18 @@ class NMTModel(object):
                 time_major=hparams.time_major
             )
 
-        # create decoder cell and decoder_emb_inp
-        self.decoder_emb_inp = tf.nn.embedding_lookup(
-            self.embedding_decoder, inputs.target_input, name='decoder_emb_inp')
-        with tf.variable_scope('decoder_cell'):
-            self.decoder_cell, self.decoder_initial_state = (
-                self._build_decoder_cell(
-                    self.encoder_outputs,
-                    self.encoder_state))
-
+        # create decoder cell
+        self.decoder_cell, self.decoder_initial_state = (
+            self._build_decoder_cell(self.encoder_outputs, self.encoder_state))
+        # create projection layer
         with tf.variable_scope("decoder/output_projection"):
-            self.projection_layer = tf.layers.Dense(hparams.tgt_vocab_size)
+            self.projection_layer = layers_core.Dense(
+                hparams.tgt_vocab_size, use_bias=False, name='output_projection')
+
         if mode != tf.contrib.learn.ModeKeys.INFER:
+            # create decoder_emb_inp
+            self.decoder_emb_inp = tf.nn.embedding_lookup(
+                self.embedding_decoder, inputs.target_input, name='decoder_emb_inp')
             # Helper
             self.helper = tf.contrib.seq2seq.TrainingHelper(
                 self.decoder_emb_inp,
@@ -75,9 +76,10 @@ class NMTModel(object):
                 self.decoder_initial_state,
                 output_layer=self.projection_layer)
             # Dynamic decoding
-            self.outputs, _ = tf.contrib.seq2seq.dynamic_decode(
+            self.outputs, self.final_context_state, _ = tf.contrib.seq2seq.dynamic_decode(
                 decoder=self.decoder,
                 output_time_major=hparams.time_major,
+                swap_memory=True,
                 maximum_iterations=hparams.maximum_iterations
                 )
             # [batch_size, time, output_size] / [time, batch_size, output_size]
@@ -98,6 +100,7 @@ class NMTModel(object):
                 self.optimizer = tf.train.AdamOptimizer(hparams.learning_rate)
                 self.train_op = self.optimizer.apply_gradients(
                     zip(self.clipped_gradients, self.params))
+        # inference
         elif mode == tf.contrib.learn.ModeKeys.INFER:
             self.tgt_sos_id = tf.cast(
                 target_vocab_table.lookup(tf.constant(hparams.sos)),
@@ -117,9 +120,11 @@ class NMTModel(object):
                 output_layer=self.projection_layer,
                 length_penalty_weight=hparams.length_penalty_weight
             )
-            self.outputs, _ = tf.contrib.seq2seq.dynamic_decode(
+            # final_context_state: The final state of decoder RNN.
+            self.outputs, self.final_context_state, _ = tf.contrib.seq2seq.dynamic_decode(
                 decoder=self.decoder,
                 output_time_major=hparams.time_major,
+                swap_memory=True,
                 maximum_iterations=hparams.maximum_iterations
                 )
             # [batch_size, beam_width, time]
@@ -168,10 +173,10 @@ class NMTModel(object):
             name="attention")
         # whether pass encoder states to decoder
         if self.hparams.pass_hidden_state:
-            decoder_initial_state = cell.zero_state(batch_size).clone(
-                cell_state=encoder_state)
+            decoder_initial_state = cell.zero_state(batch_size,
+                dtype=tf.float32).clone(cell_state=encoder_state)
         else:
-            decoder_initial_state = cell.zero_state(batch_size)
+            decoder_initial_state = cell.zero_state(batch_size, dtype=tf.float32)
         return cell, decoder_initial_state
 
 
