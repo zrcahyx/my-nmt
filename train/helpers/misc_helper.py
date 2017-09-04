@@ -173,8 +173,9 @@ def create_hparams(cfg):
       num_layers=cfg.get_int_value('Networks', 'num_layers'),
       dropout=cfg.get_float_value('Networks', 'dropout'),
       unit_type=cfg.get_string_value('Networks', 'unit_type'),
+      use_peepholes=cfg.get_boolean_value('Networks', 'use_peepholes'),
       encoder_type=cfg.get_string_value('Networks', 'encoder_type'),
-      residual=cfg.get_boolean_value('Networks', 'residual'),
+      num_residual_layers=cfg.get_int_value('Networks', 'num_residual_layers'),
       time_major=cfg.get_boolean_value('Networks', 'time_major'),
       num_embeddings_partitions=cfg.get_int_value('Networks',
                                                   'num_embeddings_partitions'),
@@ -238,4 +239,6 @@ def create_hparams(cfg):
       metrics=cfg.get_list_value('Misc', 'metrics'),
       log_device_placement=cfg.get_boolean_value('Misc', 'log_device_placement'),
       random_seed=cfg.get_int_value('Misc', 'random_seed'),
+      maximum_iterations=cfg.get_int_value('Misc', 'maximum_iterations'),
+      save_path = cfg.get_string_value('Misc', 'save_path'),
   )
