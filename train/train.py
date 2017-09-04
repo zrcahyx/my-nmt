@@ -85,9 +85,6 @@ def _run_training():
                 tgt_vocab2idx_table
             )
 
-    print('Graph build successfully!')
-    input('> ')
-
     sess_config = tf.ConfigProto(allow_soft_placement=True)
     sess_config.gpu_options.allow_growth = True
     sv = tf.train.Supervisor(
