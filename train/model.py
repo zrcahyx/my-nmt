@@ -96,7 +96,9 @@ class NMTModel(object):
             if mode == tf.contrib.learn.ModeKeys.TRAIN:
                 # Calculate and clip gradients
                 self.params = tf.trainable_variables()
-                self.gradients = tf.gradients(self.loss, self.params)
+                self.gradients = tf.gradients(
+                    self.loss, self.params,
+                    colocate_gradients_with_ops=hparams.colocate_gradients_with_ops)
                 self.clipped_gradients, _ = tf.clip_by_global_norm(
                     self.gradients, hparams.max_gradient_norm)
                 # Optimization
