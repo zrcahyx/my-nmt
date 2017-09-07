@@ -34,11 +34,11 @@ class NMTModel(object):
             create_emb_for_encoder_and_decoder(hparams))
 
         # create encoder cell and encoder_emb_inp and get encoder_state/outputs
+        source = inputs.source
         if hparams.time_major:
-            self.inputs.source = tf.transpose(inputs.source)
-            inputs.source = tf.transpose(inputs.source)
+            source = tf.transpose(inputs.source)
         self.encoder_emb_inp = tf.nn.embedding_lookup(
-            self.embedding_encoder, inputs.source, name='encoder_emb_inp')
+            self.embedding_encoder, source, name='encoder_emb_inp')
 
         if hparams.encoder_type in ['bi', 'Bi', 'BI']:
             self.encoder_outputs, self.encoder_state = run_bidirectional_rnn(
@@ -51,7 +51,7 @@ class NMTModel(object):
             self.encoder_outputs, self.encoder_state = tf.nn.dynamic_rnn(
                 self.encoder_cell, self.encoder_emb_inp,
                 sequence_length=inputs.source_sequence_length,
-                time_major=hparams.time_major
+                dtype = tf.float32, time_major=hparams.time_major
             )
 
         # create decoder cell
@@ -64,8 +64,11 @@ class NMTModel(object):
 
         if mode != tf.contrib.learn.ModeKeys.INFER:
             # create decoder_emb_inp
+            target_input = inputs.target_input
+            if hparams.time_major:
+                target_input = tf.transpose(target_input)
             self.decoder_emb_inp = tf.nn.embedding_lookup(
-                self.embedding_decoder, inputs.target_input, name='decoder_emb_inp')
+                self.embedding_decoder, target_input, name='decoder_emb_inp')
             # Helper
             self.helper = tf.contrib.seq2seq.TrainingHelper(
                 self.decoder_emb_inp,
@@ -166,10 +169,13 @@ class NMTModel(object):
         attention_mechanism = create_attention_mechanism(
             attention_option, self.hparams.num_units,
             memory, source_sequence_length)
+        alignment_history = (self.mode == tf.contrib.learn.ModeKeys.INFER and
+                         beam_width == 0)
         cell = tf.contrib.seq2seq.AttentionWrapper(
             cell,
             attention_mechanism,
             attention_layer_size=self.hparams.num_units,
+            alignment_history=alignment_history,
             name="attention")
         # whether pass encoder states to decoder
         if self.hparams.pass_hidden_state:

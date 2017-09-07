@@ -151,7 +151,9 @@ def create_attention_mechanism(attention_option, num_units, memory,
     # Mechanism
     if attention_option in ['luong', 'Luong', 'LUONG']:
         attention_mechanism = tf.contrib.seq2seq.LuongAttention(
-            num_units, memory, memory_sequence_length=source_sequence_length)
+            num_units,
+            memory,
+            memory_sequence_length=source_sequence_length)
     elif attention_option in ['scaled_luong']:
         attention_mechanism = tf.contrib.seq2seq.LuongAttention(
             num_units,

@@ -84,12 +84,13 @@ def _run_training():
                 src_vocab2idx_table,
                 tgt_vocab2idx_table
             )
+    logging.info('Build the graph successfully!')
 
     sess_config = tf.ConfigProto(allow_soft_placement=True)
     sess_config.gpu_options.allow_growth = True
     sv = tf.train.Supervisor(
-        logdir=hparams.save_path, save_model_secs=0, save_summaries_secs=3000)
-    with sv.managed_session(config=sess_config) as sess:
+        logdir=hparams.save_path, save_model_secs=0, save_summaries_secs=300)
+    with sv.managed_session(config=sess_config, start_standard_services=False) as sess:
         # random, infinite
         sess.run(dev_inputs.initializer)
         # batch, 1 epoch
