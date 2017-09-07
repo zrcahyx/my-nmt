@@ -91,9 +91,9 @@ def _run_training():
     sv = tf.train.Supervisor(
         logdir=hparams.save_path, save_model_secs=0, save_summaries_secs=300)
     with sv.managed_session(config=sess_config, start_standard_services=False) as sess:
-        # random, infinite
+        # random, infinite epoch, mini-batch calculate
         sess.run(dev_inputs.initializer)
-        # batch, 1 epoch
+        # full batch calculate, 1 epoch
         sess.run(test_inputs.initializer)
         min_dev_loss = float('inf')
         for epoch in xrange(hparams.num_train_epochs):
