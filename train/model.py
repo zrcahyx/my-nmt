@@ -61,7 +61,7 @@ class NMTModel(object):
         with tf.variable_scope("decoder/output_projection"):
             self.projection_layer = layers_core.Dense(
                 hparams.tgt_vocab_size, use_bias=False, name='output_projection')
-
+        # train and dev
         if mode != tf.contrib.learn.ModeKeys.INFER:
             # create decoder_emb_inp
             target_input = inputs.target_input
@@ -176,6 +176,7 @@ class NMTModel(object):
         cell = tf.contrib.seq2seq.AttentionWrapper(
             cell,
             attention_mechanism,
+            # context vector mix with decoder hidden state
             attention_layer_size=self.hparams.num_units,
             alignment_history=alignment_history,
             name="attention")
