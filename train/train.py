@@ -97,7 +97,7 @@ def _run_training():
     sess_config.gpu_options.allow_growth = True
     sv = tf.train.Supervisor(
         logdir=hparams.save_path, save_model_secs=0, save_summaries_secs=300)
-    with sv.managed_session(config=sess_config, start_standard_services=False) as sess:
+    with sv.managed_session(config=sess_config, start_standard_services=True) as sess:
         # random, infinite epoch, mini-batch calculate
         sess.run(dev_inputs.initializer)
         # full batch calculate, 1 epoch
