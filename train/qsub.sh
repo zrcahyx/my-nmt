@@ -19,7 +19,7 @@ function print_help()
     echo -e "\033[33m${usage}\033[0m"
 }
 
-HOST="guangzhou"
+HOST="wuhan"
 
 if [ $# -eq 1 ]; then
     print_help
