@@ -46,6 +46,6 @@ echo "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64">>run.sh
 echo "python train.py">>run.sh
 
 # ROOT_DIR=`cd .. && pwd`
-qsub -cwd -S /bin/bash -o train.log -j y -l hostname=$HOST -v PYTHONPATH=$ROOT_DIR run.sh
+qsub -cwd -S /bin/bash -o log -j y -l hostname=$HOST run.sh
 
 rm run.sh
