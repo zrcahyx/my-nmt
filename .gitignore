@@ -107,3 +107,6 @@ train/data/
 # models
 saved/
 exported/
+
+# bin
+bin/
