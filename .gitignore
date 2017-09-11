@@ -103,4 +103,7 @@ ENV/
 # dataset
 scripts/wmt_fr_en/
 train/data/
+
+# models
 saved/
+exported/

@@ -2,135 +2,42 @@
 # -*- coding: utf-8 -*-
 
 """Utility for evaluating various tasks, e.g., translation & summarization."""
-import codecs
-import os
-import re
-import subprocess
-
+import sys
+from os.path import abspath, dirname, join
+from misc_helper import format_bpe_text, format_text
 import tensorflow as tf
 
-from ..scripts import bleu
-from ..scripts import rouge
+sys.path.append(dirname(dirname(dirname(abspath(__file__)))))
+from scripts import bleu, rouge
 
 
-__all__ = ["evaluate"]
+def get_translation(nmt_outputs, sent_id, tgt_eos, bpe_delimiter):
+    """Given batch decoding outputs, select a sentence and turn to text."""
+    # Select a sentence
+    output = nmt_outputs[sent_id, :].tolist()
+    # If there is an eos symbol in outputs, cut them at that point.
+    if tgt_eos and tgt_eos in output:
+       output = output[:output.index(tgt_eos)]
+    if not bpe_delimiter:
+        translation = format_text(output)
+    else:  # BPE
+        translation = format_bpe_text(output, delimiter=bpe_delimiter)
+    return translation
 
 
-def evaluate(ref_file, trans_file, metric, bpe_delimiter=None):
-  """Pick a metric and evaluate depending on task."""
-  # BLEU scores for translation task
-  if metric.lower() == "bleu":
-    evaluation_score = _bleu(ref_file, trans_file,
-                             bpe_delimiter=bpe_delimiter)
-  # ROUGE scores for summarization tasks
-  elif metric.lower() == "rouge":
-    evaluation_score = _rouge(ref_file, trans_file,
-                              bpe_delimiter=bpe_delimiter)
-  elif metric.lower() == "accuracy":
-    evaluation_score = _accuracy(ref_file, trans_file)
-  else:
-    raise ValueError("Unknown metric %s" % metric)
-
-  return evaluation_score
-
-
-def _clean(sentence, bpe_delimiter):
-  """Clean and handle BPE delimiter."""
-  sentence = sentence.strip()
-
-  # BPE
-  if bpe_delimiter:
-    sentence = re.sub(bpe_delimiter + " ", "", sentence)
-
-  return sentence
-
-
-# Follow //transconsole/localization/machine_translation/metrics/bleu_calc.py
-def _bleu(ref_file, trans_file, bpe_delimiter=None):
-  """Compute BLEU scores and handling BPE."""
-  max_order = 4
-  smooth = False
-
-  ref_files = [ref_file]
-  reference_text = []
-  for reference_filename in ref_files:
-    with codecs.getreader("utf-8")(
-        tf.gfile.GFile(reference_filename, "rb")) as fh:
-      reference_text.append(fh.readlines())
-
-  per_segment_references = []
-  for references in zip(*reference_text):
-    reference_list = []
-    for reference in references:
-      reference = _clean(reference, bpe_delimiter)
-      reference_list.append(reference.split(" "))
-    per_segment_references.append(reference_list)
-
-  translations = []
-  with codecs.getreader("utf-8")(tf.gfile.GFile(trans_file, "rb")) as fh:
-    for line in fh:
-      line = _clean(line, bpe_delimiter)
-      translations.append(line.split(" "))
-
-  # bleu_score, precisions, bp, ratio, translation_length, reference_length
-  bleu_score, _, _, _, _, _ = bleu.compute_bleu(
-      per_segment_references, translations, max_order, smooth)
-  return 100 * bleu_score
-
-
-def _rouge(ref_file, summarization_file, bpe_delimiter=None):
-  """Compute ROUGE scores and handling BPE."""
-
-  references = []
-  with codecs.getreader("utf-8")(tf.gfile.GFile(ref_file, "rb")) as fh:
-    for line in fh:
-      references.append(_clean(line, bpe_delimiter))
-
-  hypotheses = []
-  with codecs.getreader("utf-8")(
-      tf.gfile.GFile(summarization_file, "rb")) as fh:
-    for line in fh:
-      hypotheses.append(_clean(line, bpe_delimiter))
-
-  rouge_score_map = rouge.rouge(hypotheses, references)
-  return 100 * rouge_score_map["rouge_l/f_score"]
-
-
-def _accuracy(label_file, pred_file):
-  """Compute accuracy, each line contains a label."""
-
-  with codecs.getreader("utf-8")(tf.gfile.GFile(label_file, "rb")) as label_fh:
-    with codecs.getreader("utf-8")(tf.gfile.GFile(pred_file, "rb")) as pred_fh:
-      count = 0.0
-      match = 0.0
-      for label in label_fh:
-        label = label.strip()
-        pred = pred_fh.readline().strip()
-        if label == pred:
-          match += 1
-        count += 1
-  return 100 * match / count
-
-
-def _moses_bleu(multi_bleu_script, tgt_test, trans_file, bpe_delimiter=None):
-  """Compute BLEU scores using Moses multi-bleu.perl script."""
-  # BPE
-  if bpe_delimiter:
-    debpe_tgt_test = tgt_test + ".debpe"
-    if not os.path.exists(debpe_tgt_test):
-      # TODO(thangluong): not use shell=True, can be a security hazard
-      subprocess.call("cp %s %s" % (tgt_test, debpe_tgt_test), shell=True)
-      subprocess.call("sed s/%s //g %s" % (bpe_delimiter, debpe_tgt_test),
-                      shell=True)
-    tgt_test = debpe_tgt_test
-
-  cmd = "%s %s < %s" % (multi_bleu_script, tgt_test, trans_file)
-
-  # subprocess
-  bleu_output = subprocess.check_output(cmd, shell=True)
-
-  # extract BLEU score
-  m = re.search("BLEU = (.+?),", bleu_output)
-  bleu_score = float(m.group(1))
-
-  return bleu_score
+def compute_bleu(sample_sentences, tgt_sentences, hparams):
+    """Compute bleu score according to predicted and label ids."""
+    # sample_sentences: [batch_size, time] / [time, batch_size]
+    # tgt_sentences: [batch_size, time]
+    if hparams.time_major:
+        # [batch_size, time]
+        sample_sentences = sample_sentences.T
+    translation_corpus, reference_corpus = [], []
+    for i in xrange(hparams.batch_size):
+        sample_sentence = get_translation(sample_sentences, i, hparams.eos, hparams.bpe_delimiter)
+        tgt_sentence = get_translation(tgt_sentences, i, hparams.eos, hparams.bpe_delimiter)
+        translation_corpus.append(sample_sentence)
+        reference_corpus.append([tgt_sentence])
+    bleu_score, _, _, _, _, _ = bleu.compute_bleu(
+      reference_corpus, translation_corpus, max_order=4, smooth=False)
+    return bleu_score

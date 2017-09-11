@@ -11,17 +11,21 @@ class NMTModel(object):
                  hparams,
                  mode,
                  inputs,
-                 source_vocab_table,
-                 target_vocab_table,
-                 reverse_target_vocab_table=None):
+                 src_vocab2idx_table,
+                 tgt_vocab2idx_table,
+                 src_idx2vocab_table,
+                 tgt_idx2vocab_table,
+                 reverse_tgt_vocab2idx_table=None):
 
         # initialize
         self.hparams = hparams
         self.mode = mode
         self.inputs = inputs
-        self.source_vocab_table = source_vocab_table
-        self.target_vocab_table = target_vocab_table
-        self.reverse_target_vocab_table = reverse_target_vocab_table
+        self.src_vocab2idx_table = src_vocab2idx_table
+        self.tgt_vocab2idx_table = tgt_vocab2idx_table
+        self.src_idx2vocab_table = src_idx2vocab_table
+        self.tgt_idx2vocab_table = tgt_idx2vocab_table
+        self.reverse_tgt_vocab2idx_table = reverse_tgt_vocab2idx_table
 
         # Initializer
         initializer = get_initializer(
@@ -88,11 +92,18 @@ class NMTModel(object):
             # [batch_size, time, output_size] / [time, batch_size, output_size]
             with tf.name_scope('logits'):
                 self.logits = self.outputs.rnn_output
+            # [batch_size, time] / [time, batch_size]
             with tf.name_scope('sample_ids'):
                 self.sample_ids = self.outputs.sample_id
             with tf.name_scope('loss'):
                 self.loss = self._compute_loss(self.logits)
             tf.summary.scalar('loss', self.loss)
+            # [batch_size, time] / [time, batch_size]
+            self.sample_sentences = tgt_idx2vocab_table.lookup(
+                tf.cast(self.sample_ids, tf.int64))
+            # [batch_size, time]
+            self.tgt_sentences = tgt_idx2vocab_table.lookup(
+                tf.cast(inputs.target_output, tf.int64))
             if mode == tf.contrib.learn.ModeKeys.TRAIN:
                 # Calculate and clip gradients
                 self.params = tf.trainable_variables()
@@ -108,10 +119,10 @@ class NMTModel(object):
         # inference
         elif mode == tf.contrib.learn.ModeKeys.INFER:
             self.tgt_sos_id = tf.cast(
-                target_vocab_table.lookup(tf.constant(hparams.sos)),
+                tgt_vocab2idx_table.lookup(tf.constant(hparams.sos)),
                 tf.int32)
             self.tgt_eos_id = tf.cast(
-                target_vocab_table.lookup(tf.constant(hparams.eos)),
+                tgt_vocab2idx_table.lookup(tf.constant(hparams.eos)),
                 tf.int32)
             self.start_tokens = tf.fill([self.hparams.batch_size], self.tgt_sos_id)
             self.end_token = self.tgt_eos_id
@@ -137,6 +148,9 @@ class NMTModel(object):
             if hparams.time_major:
                 # [time, batch_size, beam_width] -> [batch_size, beam_width, time]
                 self.infer_ids = tf.transpose(self.infer_ids, perm=[1, 2, 0])
+            # [batch_size, beam_width, time]
+            self.infer_bpe_sentences = tgt_idx2vocab_table.lookup(
+                tf.cast(self.infer_ids, tf.int64))
 
 
     def _build_decoder_cell(self, encoder_outputs, encoder_state):
